@@ -1,0 +1,25 @@
+{
+  "name": "bapcswatcher",
+  "version": "1.0.0",
+  "description": "Notifies discord users about new deals they set notifications for",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wzheng64/BAPCSWatcher.git"
+  },
+  "keywords": [
+    "BAPCS",
+    "pc",
+    "deals",
+    "reddit"
+  ],
+  "author": "Wilson Zheng",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wzheng64/BAPCSWatcher/issues"
+  },
+  "homepage": "https://github.com/wzheng64/BAPCSWatcher#readme"
+}
