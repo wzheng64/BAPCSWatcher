@@ -20,7 +20,7 @@ const r = new snoowrap({
 	clientId: clientId,
 	clientSecret: clientSecret,
 	username: redditUsername,
-	
+	password: redditPW,
 });
 
 client.once('ready', () => {
@@ -85,7 +85,5 @@ client.on('message', message => {
 		message.reply('there was an error trying to execute that command!');
 	}
 });
-
-setTimeout(())
 
 client.login(token);
