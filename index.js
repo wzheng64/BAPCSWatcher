@@ -86,4 +86,18 @@ client.on('message', message => {
 	}
 });
 
+setInterval(() => {
+	try {
+		r.getNew('buildapcsales').then(x => {
+			console.log(x[0].title);
+			console.log(x[0].url);
+			console.log(x[0].permalink);
+			console.log(x[0].id);
+		});
+	}
+	catch (error) {
+		console.log(error);
+	}
+}, 60000);
+
 client.login(token);
