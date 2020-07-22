@@ -1,26 +1,38 @@
+const fs = require('fs');
+
 module.exports = {
 	name: 'watch',
 	description: 'Set a watch for a deal',
 	args: true,
-	usage: '<Product Type>',
+	usage: '<Product Type> <Price> [Other details] <expiration date>(optional)',
 	cooldown: 10,
 	execute(message, args) {
-		const commandName = args[0].toLowerCase();
-		const command = message.client.commands.get(commandName) ||
-			message.client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+		// Default expiration date is 30 days after the watch is set
+		// 2592000000 is the number of milliseconds which is added to
+		// the epoch timestamp
+		let expiration = message.createdTimestamp + 2592000000;
 
-		if (!command) return message.channel.send(`There is no command with name or alias \`${commandName}\`, ${message.author}!`);
-
-		delete require.cache[require.resolve(`./${command.name}.js`)];
-
-		try {
-			const newCommand = require(`./${command.name}.js`);
-			message.client.commands.set(newCommand.name, newCommand);
-			message.channel.send(`Command \`${command.name}\` was reloaded!`);
+		if (args.length > 3) {
+			expiration = args[3];
 		}
-		catch (error) {
-			console.log(error);
-			message.channel.send(`There was an error while reloading a command \`${command.name}\`:\n\`${error.message}\``);
-		}
+
+		const watch = {
+			type: args[0],
+			price: args[1],
+			other: args[2].split(':'),
+			madeBy: message.author,
+			expiresOn: new Date(expiration),
+		};
+
+		fs.readFile('./data/watches.json', 'utf8', (err, data) => {
+			if (err) throw err;
+			const txt = JSON.parse(data);
+			txt.data.push(watch);
+			fs.writeFile('./data/flame.json', JSON.stringify(txt), function(err) {
+				if (err) throw err;
+				message.channel.send('Flame successfully added!');
+				return true;
+			});
+		});
 	},
 };
