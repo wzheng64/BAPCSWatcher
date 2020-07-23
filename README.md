@@ -25,3 +25,5 @@ All commands are prefixed with !$
 * !$watches
   * If a user uses this command, they can see all the watches that they have set.
   * Will also display the date you created the watches and the date they expire
+
+# Features to add
