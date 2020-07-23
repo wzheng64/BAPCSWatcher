@@ -2,10 +2,13 @@ const fs = require('fs');
 const Discord = require('discord.js');
 const snoowrap = require('snoowrap');
 const { prefix, token, clientId, clientSecret, redditUsername, redditPW } = require('./config.json');
+const helperOperations = require('./helper.js');
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const posts = JSON.parse(fs.readdirSync('./data/posts.json'));
+const watches = JSON.parse(fs.readdirSync('./data/watches.json'));
 
 for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
@@ -24,6 +27,9 @@ const r = new snoowrap({
 });
 
 client.once('ready', () => {
+	r.getNew('buildapcsales').then(x => {
+		console.log(x[0].title);
+	});
 	console.log('Ready!');
 });
 
@@ -88,16 +94,53 @@ client.on('message', message => {
 
 setInterval(() => {
 	try {
-		r.getNew('buildapcsales').then(x => {
-			console.log(x[0].title);
-			console.log(x[0].url);
-			console.log(x[0].permalink);
-			console.log(x[0].id);
-		});
+		r.getNew('buildapcsales')
+			.then(listing => {
+				// Return all posts from new that are not in posts
+				return listing.filter(post => !(post.id in posts));
+			})
+			.then(newPosts => {
+				newPosts.map(e => helperOperations.alertUsers(e, watches.data));
+				newPosts.map(e => {
+					posts[e.id] = e.permalink;
+				});
+				fs.writeFileSync('./data/posts.json', JSON.stringify(posts), function(err) {
+					if (err) throw err;
+					console.log('New posts added!');
+				});
+			});
 	}
 	catch (error) {
 		console.log(error);
 	}
+	// try {
+	// 	r.getNew('buildapcsales').then(x => {
+	// 		console.log(x[0].title);
+	// 		console.log(x[0].url);
+	// 		console.log('https://www.reddit.com/' + x[0].permalink);
+	// 		console.log(x[0].id);
+	// 		console.log(x[0].created_utc);
+
+	// 		const title = x[0].title.toLowerCase();
+
+	// 		const typeRE = /\[\w+\]/;
+	// 		console.log(title.match(typeRE));
+	// 		const type = title.match(typeRE)[0];
+	// 		console.log('keyBoarD'.toLowerCase() == (type.slice(1, type.length - 1)).toLowerCase());
+
+	// 		const priceRE = /\$\d+\.*\d+/;
+	// 		console.log(title.match(priceRE));
+	// 		const price = Number(title.match(priceRE)[0]);
+	// 		console.log(Number('100') <= price);
+
+	// 		const others = ['RGB', 'MECHANICAL'];
+	// 		const titleArray = title.toLowerCase().split(' ');
+	// 		others.map(e => console.log(titleArray.includes(e.toLowerCase())));
+	// 	});
+	// }
+	// catch (error) {
+	// 	console.log(error);
+	// }
 }, 60000);
 
 client.login(token);
