@@ -15,10 +15,12 @@ All commands are prefixed with !$
 
 # Commands
 
-* !$watch <args> <date>(optional) 
-  * User will enter different words separated by colons to lookout for in new posts
+* !$watch \<type\> \<minimum price\> \<Other specs\> \<Expiration date\>(optional) 
+  * Type stands for one of the product types on the sidebar of the subreddit
+  * Minimum price will be the threshold that triggers an alert.
+  * Other specs can be brand, product specifications, or other search terms, with all of the search terms separated by colons.
   * The date parameter allows the user to set an expiration date for the watch in the format DD/MM/YYYY. If no date is set, the watch will expire in 30 days.
-  * Example: !$watch Seasonic:$100:PSU 07/4/2012
+  * Example: !$watch PSU $100 Seasonic:650W 07/4/2012
   
 * !$watches
   * If a user uses this command, they can see all the watches that they have set.
