@@ -11,21 +11,26 @@ module.exports = {
 		// 2592000000 is the number of milliseconds which is added to
 		// the epoch timestamp
 		let expiration = message.createdTimestamp + 2592000000;
-		let price = args[1];
+		let price = args[1].toLowerCase();
 
 		if (args.length > 3) {
 			expiration = args[3];
 		}
 
-		if (price[0] == '$') {
-			price = price.slice(1);
+		if (price != '-') {
+			if (price[0] == '$') {
+				price = Number(price.slice(1));
+			}
+			else {
+				price = Number(price);
+			}
 		}
 
 		const watch = {
 			type: args[0].toLowerCase(),
-			price: Number(price.toLowerCase()),
+			price: price,
 			other: args[2].split(':').map(e => e.toLowerCase()),
-			madeBy: message.author,
+			madeBy: message.author.id,
 			expiresOn: new Date(expiration),
 		};
 
