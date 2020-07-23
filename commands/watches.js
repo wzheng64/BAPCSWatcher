@@ -6,8 +6,7 @@ module.exports = {
 	// eslint-disable-next-line no-unused-vars
 	execute(message, args) {
 		const months = ['January', 'February', 'March', 'April', 'May', 'June',
-			'July', 'August', 'September', 'October', 'November', 'December'
-		];
+			'July', 'August', 'September', 'October', 'November', 'December'];
 		const alerts = [];
 		if (!args.length) {
 			const id = message.author.id;
