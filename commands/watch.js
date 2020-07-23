@@ -22,9 +22,9 @@ module.exports = {
 		}
 
 		const watch = {
-			type: args[0].toLowercase(),
-			price: Number(price.toLowercase()),
-			other: args[2].split(':').map(e => e.toLowercase()),
+			type: args[0].toLowerCase(),
+			price: Number(price.toLowerCase()),
+			other: args[2].split(':').map(e => e.toLowerCase()),
 			madeBy: message.author,
 			expiresOn: new Date(expiration),
 		};
