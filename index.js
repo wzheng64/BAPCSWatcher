@@ -7,8 +7,8 @@ const helperOperations = require('./helper.js');
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-const posts = JSON.parse(fs.readdirSync('./data/posts.json'));
-const watches = JSON.parse(fs.readdirSync('./data/watches.json'));
+const posts = JSON.parse(fs.readFileSync('./data/posts.json'));
+const watches = JSON.parse(fs.readFileSync('./data/watches.json'));
 
 for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
@@ -27,9 +27,14 @@ const r = new snoowrap({
 });
 
 client.once('ready', () => {
-	r.getNew('buildapcsales').then(x => {
-		console.log(x[0].title);
-	});
+	// r.getNew('buildapcsales').then(x => {
+	// 	console.log(x);
+	// 	console.log(x.length);
+	// });
+	// watches.data.forEach(element => {
+	// 	client.users.fetch(element.madeBy.id)
+	// 		.then(u => u.send('Hello'));
+	// });
 	console.log('Ready!');
 });
 
@@ -100,7 +105,7 @@ setInterval(() => {
 				return listing.filter(post => !(post.id in posts));
 			})
 			.then(newPosts => {
-				newPosts.map(e => helperOperations.alertUsers(e, watches.data));
+				newPosts.map(e => helperOperations.alertUsers(client, e, watches.data));
 				newPosts.map(e => {
 					posts[e.id] = e.permalink;
 				});
