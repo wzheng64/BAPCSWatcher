@@ -1,4 +1,4 @@
-function alertUsers(post, watches) {
+function alertUsers(client, post, watches) {
 	const title = post.title.toLowerCase();
 	const titleArray = title.toLowerCase().split(' ');
 	const type = title.match(/\[(\w+[ *\w*]*)\]/)[1].toLowerCase();
@@ -27,18 +27,29 @@ function alertUsers(post, watches) {
 	// Convert the string to a number for comparison
 	price = Number(price);
 	watches.forEach(watch => {
-		const typeAlert = watch.type == '_' || watch.type == type;
-		const priceAlert = watch.price == '_' || watch.price <= price;
+		const typeAlert = watch.type == '-' || watch.type == type;
+		const priceAlert = watch.price == '-' || watch.price <= price;
 		let otherAlert = true;
-		watch.other.forEach(element => {
-			if (!titleArray.includes(element)) {
-				otherAlert = false;
-			}
-		});
+		if (!watch.other == ['-']) {
+			watch.other.forEach(element => {
+				if (!titleArray.includes(element) && title.includes(element)) {
+					otherAlert = false;
+				}
+			});
+		}
 		if (typeAlert && priceAlert && otherAlert) {
-			const data = 'https://www.reddit.com/' + post.permalink;
-			watch.madeBy.send('Here\'s a link to a deal that triggered a watch!');
-			return watch.madeBy.send(data, { split: true });
+			const link = [];
+			link.push('Here\'s a link to a deal that triggered a watch of yours!');
+			link.push('https://www.reddit.com/' + post.permalink);
+			client.users.fetch(watch.madeBy)
+				.then(u => {
+					try {
+						return u.send(link.join('\n'), { split: true });
+					}
+					catch (error) {
+						console.log(error);
+					}
+				});
 		}
 	});
 }
