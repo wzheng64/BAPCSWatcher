@@ -29,3 +29,5 @@ All commands are prefixed with !$
   * Will also display the date you created the watches and the date they expire
 
 # Features to add
+  * Allow user to delete watches they set (will need a way to categorize watches/id)
+  * Implement expiration checking
