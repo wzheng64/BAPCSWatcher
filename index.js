@@ -99,6 +99,9 @@ client.on('message', message => {
 
 setInterval(() => {
 	try {
+		// Check the time, if its close to midnight
+		// Check watches and remove any that have expired
+		
 		r.getNew('buildapcsales')
 			.then(listing => {
 				// Return all posts from new that are not in posts
