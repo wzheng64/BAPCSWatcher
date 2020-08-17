@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/wzheng64/BAPCSWatcher#readme",
   "dependencies": {
+    "node-fetch": "^2.6.0",
     "snoowrap": "^1.21.0"
   }
 }
