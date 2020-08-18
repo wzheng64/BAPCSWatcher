@@ -1,7 +1,6 @@
 # BAPCSWatcher
 
 BAPCSWatcher is a discord bot that users can add to their servers.
-
 While the bot is in a server, users can tell the bot to watch for incoming deals posted to www.reddit.com/r/buildapcsales. Users will be notified of specific deals that they've set a notification for.
 
 The type of deal to lookout for will be based on a combination of things to lookout for set by the user including:
@@ -26,8 +25,9 @@ All commands are prefixed with !$
   
 * !$watches
   * If a user uses this command, they can see all the watches that they have set.
-  * Will also display the date you created the watches and the date they expire
+  * Will also display the ID of each watch and the date they expire
 
-# Features to add
-  * Allow user to delete watches they set (will need a way to categorize watches/id)
-  * Implement expiration checking
+* !$delete <id>
+  * Deletes a specific watch the user has based on the ID
+  * Users can only delete their own watches
+  * To get an ID, call the watches command
