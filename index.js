@@ -14,7 +14,6 @@ const {
 } = require('./config.json');
 const helperOperations = require('./helper.js');
 const serviceAccount = require('./fb.json');
-const helper = require('./helper.js');
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
