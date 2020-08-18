@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const discord = require('discord.js');
 
 module.exports = {
 	name: 'watches',
@@ -6,9 +7,13 @@ module.exports = {
 	execute(message, args, token) {
 		const months = ['January', 'February', 'March', 'April', 'May', 'June',
 			'July', 'August', 'September', 'October', 'November', 'December'];
-		const alerts = [];
+		const embed = new discord.MessageEmbed()
+			.setColor('#eb9b34')
+			.setAuthor(message.author.username, message.author.avatarURL())
+			.setTitle('Watches')
+			.setDescription('Watches set by you!')
+			.setTimestamp();
 		if (!args.length) {
-			alerts.push('Here\'s a list of all your current watches.');
 			fetch(`https://bapcswatcher.firebaseio.com/watches/${message.author.id}.json?access_token=${ token }`)
 				.then((res, error) => {
 					if (error) throw error;
@@ -20,10 +25,10 @@ module.exports = {
 						const e = userWatches[watchID];
 						const date = new Date(e.expiresOn);
 						const dateString = `${months[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
-						alerts.push(`Watch ID: ${watchID}`);
-						alerts.push(`Product type: ${e.type}	Price: $${e.price}	Other specs: ${e.other.join(', ')}	Expires on: ${dateString} \n`);
+						embed.addField(`ID: ${watchID}`, `Product type: ${e.type}	Price: $${e.price}	Other specs: ${e.other.join(', ')}\nExpires on: ${dateString} \n`);
+						embed.addField('\u200b', '\u200b');
 					}
-					return message.author.send(alerts.join('\n'), { split: true })
+					return message.author.send({ embed: embed })
 						.then(() => {
 							if (message.channel.type === 'dm') return;
 							message.reply('I\'ve send you a DM with all of your watches!');
