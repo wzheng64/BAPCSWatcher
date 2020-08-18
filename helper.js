@@ -1,3 +1,5 @@
+const fetch = require('node-fetch');
+
 function alertUsers(client, post, watches) {
 	const title = post.title.toLowerCase();
 	const titleArray = title.toLowerCase().split(' ');
@@ -58,6 +60,27 @@ function alertUsers(client, post, watches) {
 	}
 }
 
+function deleteExpired(token) {
+	fetch(`https://bapcswatcher.firebaseio.com/watches.json?access_token=${token}`)
+		.then(res => res.text())
+		.then(body => JSON.parse(body))
+		.then(watches => {
+			console.log(watches);
+			const rn = new Date();
+			for (const user in watches) {
+				for (const watchID in watches[user]) {
+					const watch = watches[user][watchID];
+					if (rn >= new Date(watch.expiresOn)) {
+						fetch(`https://bapcswatcher.firebaseio.com/watches/${user}/${watchID}.json?access_token=${ token }`, {
+							method: 'DELETE',
+						});
+					}
+				}
+			}
+		});
+}
+
 module.exports = {
 	alertUsers: alertUsers,
+	deleteExpired: deleteExpired,
 };

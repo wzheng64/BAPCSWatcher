@@ -14,6 +14,7 @@ const {
 } = require('./config.json');
 const helperOperations = require('./helper.js');
 const serviceAccount = require('./fb.json');
+const helper = require('./helper.js');
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
@@ -182,5 +183,15 @@ setInterval(() => {
 		console.log(error);
 	}
 }, 60000);
+
+const rn = new Date();
+let msToMidnight = 999 - rn.getUTCMilliseconds();
+msToMidnight += (59 - rn.getUTCSeconds()) * 1000;
+msToMidnight += (59 - rn.getUTCMinutes()) * 60 * 1000;
+msToMidnight += (23 - rn.getUTCHours()) * 60 * 60 * 1000;
+
+setTimeout(() => {
+	setInterval(() => helperOperations.deleteExpired(accessToken), 86400000);
+}, msToMidnight);
 
 client.login(token);
