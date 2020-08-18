@@ -174,8 +174,6 @@ setInterval(() => {
 			})
 			.then(newPosts => {
 				newPosts.map(e => helperOperations.alertUsers(client, e, watches));
-				console.log(watches);
-				console.log('Alert users of new deals!');
 			});
 	}
 	catch (error) {
