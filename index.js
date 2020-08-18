@@ -42,6 +42,7 @@ jwtClient.authorize((error, tokens) => {
 	}
 	else {
 		accessToken = tokens.access_token;
+		jwtClient.setCredentials({ refresh_token: tokens.refresh_token });
 		posts = fetch(`https://bapcswatcher.firebaseio.com/posts.json?access_token=${accessToken}`)
 			.then(res => res.text())
 			.then(body => JSON.parse(body));
@@ -50,6 +51,22 @@ jwtClient.authorize((error, tokens) => {
 			.then(res => res.text())
 			.then(body => JSON.parse(body));
 	}
+});
+
+jwtClient.on('tokens', (tokens) => {
+	if (tokens.refresh_token) {
+		// store the refresh_token in my database!
+		fs.readFile('./config.json', 'utf8', (err, data) => {
+			if (err) throw err;
+			const txt = JSON.parse(data);
+			txt.refreshToken = tokens.refresh_token;
+			fs.writeFile('./config.json', JSON.stringify(txt), function(err) {
+				if (err) throw err;
+				return true;
+			});
+		});
+	}
+	accessToken = tokens.access_token;
 });
 
 for (const file of commandFiles) {
@@ -69,34 +86,6 @@ const r = new snoowrap({
 });
 
 client.once('ready', () => {
-	try {
-		fetch(`https://bapcswatcher.firebaseio.com/posts.json?access_token=${accessToken}`)
-			.then(res => res.text())
-			.then(body => posts = JSON.parse(body))
-			.then(() => fetch(`https://bapcswatcher.firebaseio.com/watches.json?access_token=${accessToken}`))
-			.then(res => res.text())
-			.then(body => watches = JSON.parse(body))
-			.then(() => r.getNew('buildapcsales'))
-			.then(listing => {
-				// Return all posts from new that are not in posts
-				const currentNew = {};
-				listing.map(post => {
-					currentNew[post.id] = post.permalink;
-				});
-				const body = JSON.stringify(currentNew);
-				fetch(`https://bapcswatcher.firebaseio.com/posts.json?access_token=${accessToken}`, {
-					method: 'PUT',
-					body: body,
-				});
-				return listing.filter(post => !(post.id in posts));
-			})
-			.then(newPosts => {
-				newPosts.map(e => helperOperations.alertUsers(client, e, watches));
-			});
-	}
-	catch (error) {
-		console.log(error);
-	}
 	console.log('Ready!');
 });
 
