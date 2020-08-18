@@ -26,32 +26,36 @@ function alertUsers(client, post, watches) {
 	}
 	// Convert the string to a number for comparison
 	price = Number(price);
-	watches.forEach(watch => {
-		const typeAlert = watch.type == '-' || watch.type == type;
-		const priceAlert = watch.price == '-' || watch.price <= price;
-		let otherAlert = true;
-		if (!watch.other == ['-']) {
-			watch.other.forEach(element => {
-				if (!titleArray.includes(element) && title.includes(element)) {
-					otherAlert = false;
-				}
-			});
-		}
-		if (typeAlert && priceAlert && otherAlert) {
-			const link = [];
-			link.push('Here\'s a link to a deal that triggered a watch of yours!');
-			link.push('https://www.reddit.com/' + post.permalink);
-			client.users.fetch(watch.madeBy)
-				.then(u => {
-					try {
-						return u.send(link.join('\n'), { split: true });
-					}
-					catch (error) {
-						console.log(error);
+
+	for (const user in watches) {
+		for (const watchID in watches[user]) {
+			const watch = watches[user][watchID];
+			const typeAlert = watch.type == '-' || watch.type == type;
+			const priceAlert = watch.price == '-' || watch.price <= price;
+			let otherAlert = true;
+			if (!watch.other == ['-']) {
+				watch.other.forEach(element => {
+					if (!titleArray.includes(element) && title.includes(element)) {
+						otherAlert = false;
 					}
 				});
+			}
+			if (typeAlert && priceAlert && otherAlert) {
+				const link = [];
+				link.push('Here\'s a link to a deal that triggered a watch of yours!');
+				link.push('https://www.reddit.com/' + post.permalink);
+				client.users.fetch(user)
+					.then(u => {
+						try {
+							return u.send(link.join('\n'), { split: true });
+						}
+						catch (error) {
+							console.log(error);
+						}
+					});
+			}
 		}
-	});
+	}
 }
 
 module.exports = {

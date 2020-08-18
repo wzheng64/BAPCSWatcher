@@ -1,14 +1,56 @@
 const fs = require('fs');
 const Discord = require('discord.js');
 const snoowrap = require('snoowrap');
-const { prefix, token, clientId, clientSecret, redditUsername, redditPW } = require('./config.json');
+const fetch = require('node-fetch');
+const google = require('googleapis');
+
+const {
+	prefix,
+	token,
+	clientId,
+	clientSecret,
+	redditUsername,
+	redditPW,
+} = require('./config.json');
 const helperOperations = require('./helper.js');
+const serviceAccount = require('./fb.json');
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
+const scopes = [
+	'https://www.googleapis.com/auth/userinfo.email',
+	'https://www.googleapis.com/auth/firebase',
+];
+
+const jwtClient = new google.Auth.JWT(
+	serviceAccount.client_email,
+	null,
+	serviceAccount.private_key,
+	scopes,
+);
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-const posts = JSON.parse(fs.readFileSync('./data/posts.json'));
-const watches = JSON.parse(fs.readFileSync('./data/watches.json'));
+let accessToken = null;
+let posts = null;
+let watches = null;
+
+jwtClient.authorize((error, tokens) => {
+	if (error) {
+		console.log('Error making request to generate access token:', error);
+	}
+	else if (tokens.access_token === null) {
+		console.log('Provided service account does not have permission to generate access tokens');
+	}
+	else {
+		accessToken = tokens.access_token;
+		posts = fetch(`https://bapcswatcher.firebaseio.com/posts.json?access_token=${accessToken}`)
+			.then(res => res.text())
+			.then(body => JSON.parse(body));
+
+		watches = fetch(`https://bapcswatcher.firebaseio.com/watches.json?access_token=${accessToken}`)
+			.then(res => res.text())
+			.then(body => JSON.parse(body));
+	}
+});
 
 for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
@@ -27,14 +69,34 @@ const r = new snoowrap({
 });
 
 client.once('ready', () => {
-	// r.getNew('buildapcsales').then(x => {
-	// 	console.log(x);
-	// 	console.log(x.length);
-	// });
-	// watches.data.forEach(element => {
-	// 	client.users.fetch(element.madeBy.id)
-	// 		.then(u => u.send('Hello'));
-	// });
+	try {
+		fetch(`https://bapcswatcher.firebaseio.com/posts.json?access_token=${accessToken}`)
+			.then(res => res.text())
+			.then(body => posts = JSON.parse(body))
+			.then(() => fetch(`https://bapcswatcher.firebaseio.com/watches.json?access_token=${accessToken}`))
+			.then(res => res.text())
+			.then(body => watches = JSON.parse(body))
+			.then(() => r.getNew('buildapcsales'))
+			.then(listing => {
+				// Return all posts from new that are not in posts
+				const currentNew = {};
+				listing.map(post => {
+					currentNew[post.id] = post.permalink;
+				});
+				const body = JSON.stringify(currentNew);
+				fetch(`https://bapcswatcher.firebaseio.com/posts.json?access_token=${accessToken}`, {
+					method: 'PUT',
+					body: body,
+				});
+				return listing.filter(post => !(post.id in posts));
+			})
+			.then(newPosts => {
+				newPosts.map(e => helperOperations.alertUsers(client, e, watches));
+			});
+	}
+	catch (error) {
+		console.log(error);
+	}
 	console.log('Ready!');
 });
 
@@ -46,8 +108,8 @@ client.on('message', message => {
 	// First word is considered the command and the rest of the args contain the arguments
 	const commandName = args.shift().toLowerCase();
 
-	const command = client.commands.get(commandName)
-		|| client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+	const command = client.commands.get(commandName) ||
+		client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
 	if (!command) return;
 
@@ -89,7 +151,7 @@ client.on('message', message => {
 
 	// Try to execute the command
 	try {
-		command.execute(message, args);
+		command.execute(message, args, accessToken);
 	}
 	catch (error) {
 		console.error(error);
@@ -101,54 +163,35 @@ setInterval(() => {
 	try {
 		// Check the time, if its close to midnight
 		// Check watches and remove any that have expired
-		
-		r.getNew('buildapcsales')
+		fetch(`https://bapcswatcher.firebaseio.com/posts.json?access_token=${accessToken}`)
+			.then(res => res.text())
+			.then(body => posts = JSON.parse(body))
+			.then(() => fetch(`https://bapcswatcher.firebaseio.com/watches.json?access_token=${accessToken}`))
+			.then(res => res.text())
+			.then(body => watches = JSON.parse(body))
+			.then(() => r.getNew('buildapcsales'))
 			.then(listing => {
 				// Return all posts from new that are not in posts
+				const currentNew = {};
+				listing.map(post => {
+					currentNew[post.id] = post.permalink;
+				});
+				const body = JSON.stringify(currentNew);
+				fetch(`https://bapcswatcher.firebaseio.com/posts.json?access_token=${accessToken}`, {
+					method: 'PUT',
+					body: body,
+				});
 				return listing.filter(post => !(post.id in posts));
 			})
 			.then(newPosts => {
-				newPosts.map(e => helperOperations.alertUsers(client, e, watches.data));
-				newPosts.map(e => {
-					posts[e.id] = e.permalink;
-				});
-				fs.writeFileSync('./data/posts.json', JSON.stringify(posts), function(err) {
-					if (err) throw err;
-					console.log('New posts added!');
-				});
+				newPosts.map(e => helperOperations.alertUsers(client, e, watches));
+				console.log(watches);
+				console.log('Alert users of new deals!');
 			});
 	}
 	catch (error) {
 		console.log(error);
 	}
-	// try {
-	// 	r.getNew('buildapcsales').then(x => {
-	// 		console.log(x[0].title);
-	// 		console.log(x[0].url);
-	// 		console.log('https://www.reddit.com/' + x[0].permalink);
-	// 		console.log(x[0].id);
-	// 		console.log(x[0].created_utc);
-
-	// 		const title = x[0].title.toLowerCase();
-
-	// 		const typeRE = /\[\w+\]/;
-	// 		console.log(title.match(typeRE));
-	// 		const type = title.match(typeRE)[0];
-	// 		console.log('keyBoarD'.toLowerCase() == (type.slice(1, type.length - 1)).toLowerCase());
-
-	// 		const priceRE = /\$\d+\.*\d+/;
-	// 		console.log(title.match(priceRE));
-	// 		const price = Number(title.match(priceRE)[0]);
-	// 		console.log(Number('100') <= price);
-
-	// 		const others = ['RGB', 'MECHANICAL'];
-	// 		const titleArray = title.toLowerCase().split(' ');
-	// 		others.map(e => console.log(titleArray.includes(e.toLowerCase())));
-	// 	});
-	// }
-	// catch (error) {
-	// 	console.log(error);
-	// }
 }, 60000);
 
 client.login(token);

@@ -23,6 +23,8 @@
   },
   "homepage": "https://github.com/wzheng64/BAPCSWatcher#readme",
   "dependencies": {
+    "firebase": "^7.18.0",
+    "googleapis": "^59.0.0",
     "node-fetch": "^2.6.0",
     "snoowrap": "^1.21.0"
   }
